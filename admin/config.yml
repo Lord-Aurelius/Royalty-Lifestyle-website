@@ -1,6 +1,8 @@
 backend:
-  name: git-gateway
+  name: github
+  repo: Lord-Aurelius/Royalty-Lifestyle-website
   branch: main
+  base_url: https://royalty-lifestyle-website.netlify.app
 
 media_folder: "images/uploads"
 public_folder: "images/uploads"
