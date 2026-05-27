@@ -1,11 +1,477 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Royalty Blog Admin</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Royalty Blog Admin</title>
+<style>
+  :root {
+    --black:#05030a;--deep:#0d0820;--purple:#5b2d8e;--purple-light:#9b6dce;
+    --gold:#c9a84c;--gold-light:#e8c96a;--white:#f5f0ff;--muted:#9b8cb2;
+    --border:rgba(201,168,76,.2);--card:rgba(13,8,32,.8);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--black);color:var(--white);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;}
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Montserrat:wght@400;500;600&display=swap');
+
+  /* ── LOGIN ── */
+  #loginScreen{display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(ellipse at 30% 40%,rgba(91,45,142,.25) 0%,transparent 60%);}
+  .login-box{background:var(--card);border:1px solid var(--border);padding:52px 48px;max-width:420px;width:90%;text-align:center;}
+  .login-crown{font-size:2.4rem;margin-bottom:16px;}
+  .login-title{font-family:'Cinzel',serif;font-size:1.4rem;color:var(--gold);letter-spacing:.15em;margin-bottom:6px;}
+  .login-sub{font-size:.8rem;color:var(--muted);margin-bottom:36px;font-family:'Cormorant Garamond',serif;font-style:italic;}
+  .login-input{width:100%;background:rgba(91,45,142,.08);border:1px solid var(--border);color:var(--white);padding:13px 16px;font-size:.9rem;outline:none;margin-bottom:14px;transition:border-color .25s;}
+  .login-input:focus{border-color:var(--gold);}
+  .login-btn{width:100%;background:var(--gold);color:var(--black);border:none;padding:14px;font-family:'Montserrat',sans-serif;font-size:.8rem;font-weight:600;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;transition:background .25s;}
+  .login-btn:hover{background:var(--gold-light);}
+  .login-error{color:#e05555;font-size:.78rem;margin-top:10px;min-height:18px;}
+
+  /* ── SHELL ── */
+  #app{display:none;}
+  .topbar{background:var(--deep);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;justify-content:space-between;height:58px;position:sticky;top:0;z-index:100;}
+  .topbar-brand{font-family:'Cinzel',serif;font-size:.95rem;color:var(--gold);letter-spacing:.12em;}
+  .topbar-brand span{color:var(--muted);font-size:.7rem;margin-left:10px;font-family:'Montserrat',sans-serif;letter-spacing:.05em;}
+  .topbar-right{display:flex;gap:12px;align-items:center;}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;font-family:'Montserrat',sans-serif;font-size:.72rem;font-weight:600;letter-spacing:.1em;text-transform:uppercase;border:none;cursor:pointer;transition:all .2s;}
+  .btn-gold{background:var(--gold);color:var(--black);}
+  .btn-gold:hover{background:var(--gold-light);}
+  .btn-outline{background:transparent;color:var(--gold);border:1px solid var(--border);}
+  .btn-outline:hover{border-color:var(--gold);background:rgba(201,168,76,.06);}
+  .btn-sm{padding:6px 14px;font-size:.68rem;}
+  .btn-danger{background:transparent;color:#e05555;border:1px solid rgba(224,85,85,.3);}
+  .btn-danger:hover{background:rgba(224,85,85,.1);}
+
+  /* ── LAYOUT ── */
+  .layout{display:grid;grid-template-columns:260px 1fr;min-height:calc(100vh - 58px);}
+  .sidebar{background:var(--deep);border-right:1px solid var(--border);padding:24px 0;}
+  .sidebar-section{padding:0 16px;margin-bottom:8px;}
+  .sidebar-label{font-size:.62rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);padding:0 12px;margin-bottom:8px;}
+  .sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:4px;cursor:pointer;font-size:.82rem;color:var(--muted);transition:all .2s;border:none;background:none;width:100%;text-align:left;}
+  .sidebar-item:hover,.sidebar-item.active{background:rgba(201,168,76,.08);color:var(--white);}
+  .sidebar-item.active{border-left:2px solid var(--gold);}
+  .sidebar-item svg{width:15px;height:15px;stroke:currentColor;fill:none;flex-shrink:0;}
+  .sidebar-posts{padding:16px;}
+  .post-item{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 12px;border:1px solid transparent;border-radius:4px;cursor:pointer;margin-bottom:6px;transition:all .2s;}
+  .post-item:hover{border-color:var(--border);background:rgba(201,168,76,.04);}
+  .post-item.selected{border-color:rgba(201,168,76,.35);background:rgba(201,168,76,.07);}
+  .post-item-title{font-size:.8rem;color:var(--white);margin-bottom:3px;line-height:1.3;}
+  .post-item-date{font-size:.67rem;color:var(--muted);}
+  .post-item-tag{font-size:.58rem;padding:2px 7px;background:rgba(201,168,76,.15);color:var(--gold);border-radius:2px;white-space:nowrap;margin-top:4px;display:inline-block;}
+  .post-item-del{background:none;border:none;color:rgba(224,85,85,.5);cursor:pointer;font-size:1rem;padding:2px 4px;line-height:1;flex-shrink:0;transition:color .2s;}
+  .post-item-del:hover{color:#e05555;}
+
+  /* ── MAIN CONTENT ── */
+  .main{padding:32px 36px;overflow-y:auto;}
+  .main-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;}
+  .main-title{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--white);letter-spacing:.08em;}
+  .main-title small{font-family:'Montserrat',sans-serif;font-size:.68rem;color:var(--muted);letter-spacing:.05em;display:block;margin-top:4px;font-weight:400;}
+
+  /* ── EDITOR ── */
+  .editor-grid{display:grid;grid-template-columns:1fr 340px;gap:24px;}
+  .form-group{margin-bottom:20px;}
+  .form-label{display:block;font-size:.7rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+  .form-input{width:100%;background:rgba(91,45,142,.08);border:1px solid var(--border);color:var(--white);padding:11px 14px;font-size:.9rem;outline:none;transition:border-color .25s;font-family:inherit;}
+  .form-input:focus{border-color:var(--gold);}
+  .form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239b8cb2' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px;cursor:pointer;}
+  .form-textarea{min-height:380px;resize:vertical;font-family:'Courier New',monospace;font-size:.88rem;line-height:1.7;}
+  .toolbar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px;padding:8px;background:rgba(91,45,142,.06);border:1px solid var(--border);border-bottom:none;}
+  .tool-btn{background:none;border:1px solid transparent;color:var(--muted);padding:4px 10px;font-size:.78rem;cursor:pointer;border-radius:2px;transition:all .2s;font-family:'Montserrat',sans-serif;}
+  .tool-btn:hover{border-color:var(--border);color:var(--white);background:rgba(201,168,76,.06);}
+  .tool-sep{width:1px;background:var(--border);margin:2px 4px;}
+
+  .sidebar-panel{background:var(--card);border:1px solid var(--border);padding:22px;height:fit-content;}
+  .sidebar-panel + .sidebar-panel{margin-top:16px;}
+  .panel-title{font-family:'Cinzel',serif;font-size:.82rem;color:var(--gold);letter-spacing:.1em;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+
+  .preview-area{background:rgba(0,0,0,.3);border:1px solid var(--border);padding:20px;min-height:180px;font-family:'Cormorant Garamond',serif;font-size:1rem;line-height:1.8;color:rgba(196,184,212,.85);}
+  .preview-area h2{font-family:'Cinzel',serif;color:var(--gold);margin:16px 0 8px;}
+  .preview-area h3{font-family:'Cinzel',serif;color:var(--gold-light);margin:12px 0 6px;font-size:.95rem;}
+  .preview-area strong{color:var(--white);}
+  .preview-area ul{padding-left:20px;margin-bottom:12px;}
+  .preview-area p{margin-bottom:10px;}
+
+  /* ── DOWNLOAD AREA ── */
+  .download-area{background:rgba(201,168,76,.05);border:1px solid rgba(201,168,76,.2);padding:22px;margin-top:24px;}
+  .download-title{font-family:'Cinzel',serif;font-size:.85rem;color:var(--gold);letter-spacing:.1em;margin-bottom:12px;}
+  .download-steps{list-style:none;counter-reset:step;}
+  .download-steps li{counter-increment:step;display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;font-size:.82rem;color:var(--muted);line-height:1.5;}
+  .download-steps li::before{content:counter(step);display:flex;align-items:center;justify-content:center;width:22px;height:22px;background:var(--gold);color:var(--black);border-radius:50%;font-size:.7rem;font-weight:700;flex-shrink:0;margin-top:1px;}
+  .download-steps li strong{color:var(--white);}
+  code{background:rgba(91,45,142,.2);padding:1px 6px;font-size:.82rem;border-radius:2px;color:var(--purple-light);}
+
+  /* ── STATUS / TOAST ── */
+  .toast{position:fixed;bottom:28px;right:28px;background:var(--deep);border:1px solid var(--gold);color:var(--gold);padding:14px 22px;font-family:'Montserrat',sans-serif;font-size:.78rem;letter-spacing:.06em;z-index:999;transform:translateY(80px);opacity:0;transition:all .35s;pointer-events:none;}
+  .toast.show{transform:translateY(0);opacity:1;}
+
+  /* ── RESPONSIVE ── */
+  @media(max-width:900px){
+    .layout{grid-template-columns:1fr;}
+    .sidebar{display:none;}
+    .editor-grid{grid-template-columns:1fr;}
+  }
+</style>
 </head>
 <body>
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+
+<!-- LOGIN -->
+<div id="loginScreen">
+  <div class="login-box">
+    <div class="login-crown">👑</div>
+    <div class="login-title">ROYALTY ADMIN</div>
+    <div class="login-sub">Blog Management Dashboard</div>
+    <input type="password" id="pwInput" class="login-input" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    <button class="login-btn" onclick="doLogin()">Enter Dashboard</button>
+    <div class="login-error" id="loginErr"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-brand">✦ ROYALTY ADMIN <span>Blog Dashboard</span></div>
+    <div class="topbar-right">
+      <a href="/" target="_blank" class="btn btn-outline btn-sm">View Site ↗</a>
+      <button class="btn btn-outline btn-sm" onclick="doLogout()">Sign Out</button>
+    </div>
+  </div>
+  <div class="layout">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Actions</div>
+        <button class="sidebar-item active" onclick="showView('editor')">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+          New Post
+        </button>
+        <button class="sidebar-item" onclick="showView('posts')">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          All Posts
+        </button>
+      </div>
+      <div class="sidebar-section" style="margin-top:16px;">
+        <div class="sidebar-label">Published Posts</div>
+        <div id="sidebarPostList" style="padding:0 0 0 4px;"></div>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div class="main" id="mainView">
+      <!-- Editor View -->
+      <div id="editorView">
+        <div class="main-header">
+          <div class="main-title">Write Blog Post <small>Fill in the fields below — then download and upload the file</small></div>
+          <div style="display:flex;gap:10px;">
+            <button class="btn btn-outline" onclick="clearEditor()">Clear</button>
+            <button class="btn btn-gold" onclick="downloadPost()">⬇ Download Post File</button>
+          </div>
+        </div>
+
+        <div class="editor-grid">
+          <!-- Left: writing -->
+          <div>
+            <div class="form-group">
+              <label class="form-label">Post Title *</label>
+              <input type="text" id="postTitle" class="form-input" placeholder="e.g. 5 Tips for Healthy Natural Hair"/>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+              <div class="form-group">
+                <label class="form-label">Category *</label>
+                <select id="postTag" class="form-input form-select">
+                  <option value="Hair Care">Hair Care</option>
+                  <option value="Skin Care">Skin Care</option>
+                  <option value="Nail Art">Nail Art</option>
+                  <option value="Manicure">Manicure</option>
+                  <option value="Barbershop">Barbershop</option>
+                  <option value="General">General</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Date</label>
+                <input type="date" id="postDate" class="form-input"/>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Short Excerpt (shown on blog cards) *</label>
+              <input type="text" id="postExcerpt" class="form-input" placeholder="A one-sentence summary of the post…"/>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Post Body (Markdown) *</label>
+              <div class="toolbar">
+                <button class="tool-btn" onclick="insertMd('## ','')">H2</button>
+                <button class="tool-btn" onclick="insertMd('### ','')">H3</button>
+                <div class="tool-sep"></div>
+                <button class="tool-btn" onclick="insertMd('**','**')"><b>B</b></button>
+                <button class="tool-btn" onclick="insertMd('*','*')"><i>I</i></button>
+                <div class="tool-sep"></div>
+                <button class="tool-btn" onclick="insertMd('- ','')">• List</button>
+                <button class="tool-btn" onclick="insertMd('\n---\n','')">Line</button>
+                <div class="tool-sep"></div>
+                <button class="tool-btn" onclick="insertMd('\n\n','')">¶ Break</button>
+              </div>
+              <textarea id="postBody" class="form-input form-textarea" placeholder="Write your post here using Markdown...&#10;&#10;## Section Heading&#10;&#10;Your paragraph text here.&#10;&#10;### Sub-heading&#10;&#10;- Bullet point one&#10;- Bullet point two" oninput="updatePreview()"></textarea>
+            </div>
+          </div>
+
+          <!-- Right: sidebar panels -->
+          <div>
+            <div class="sidebar-panel">
+              <div class="panel-title">✦ PUBLISH</div>
+              <button class="btn btn-gold" style="width:100%;justify-content:center;margin-bottom:10px;" onclick="downloadPost()">⬇ Download .md File</button>
+              <button class="btn btn-outline" style="width:100%;justify-content:center;" onclick="updateIndexFile()">⬇ Download posts-index.json</button>
+              <p style="font-size:.72rem;color:var(--muted);margin-top:12px;line-height:1.6;">Download both files, then upload them to your GitHub repo. The post goes live automatically.</p>
+            </div>
+
+            <div class="sidebar-panel" style="margin-top:16px;">
+              <div class="panel-title">✦ LIVE PREVIEW</div>
+              <div class="preview-area" id="previewArea"><em style="color:var(--muted);font-size:.88rem;">Start typing to see a preview…</em></div>
+            </div>
+
+            <div class="sidebar-panel" style="margin-top:16px;">
+              <div class="panel-title">✦ MARKDOWN GUIDE</div>
+              <div style="font-size:.78rem;color:var(--muted);line-height:2;">
+                <code>## Heading</code> — big heading<br>
+                <code>### Sub-heading</code> — smaller<br>
+                <code>**bold text**</code> — <strong style="color:var(--white);">bold</strong><br>
+                <code>*italic text*</code> — <em>italic</em><br>
+                <code>- item</code> — bullet point<br>
+                <code>blank line</code> — new paragraph
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- How to publish steps -->
+        <div class="download-area">
+          <div class="download-title">✦ HOW TO PUBLISH YOUR POST</div>
+          <ol class="download-steps">
+            <li><span><strong>Write your post</strong> in the editor above, fill in the title, category, excerpt, and body.</span></li>
+            <li><span>Click <strong>"⬇ Download .md File"</strong> — a file like <code>2025-05-27-your-title.md</code> will download to your computer.</span></li>
+            <li><span>Click <strong>"⬇ Download posts-index.json"</strong> — this updated list file will download.</span></li>
+            <li><span>Go to your <strong>GitHub repo</strong> → <code>_posts/</code> folder → drag and drop the <code>.md</code> file → commit.</span></li>
+            <li><span>Also upload the <code>posts-index.json</code> to the <strong>root of your repo</strong> (replacing the old one) → commit.</span></li>
+            <li><span><strong>Netlify auto-deploys</strong> in about 30 seconds → your post is live! 🎉</span></li>
+          </ol>
+        </div>
+      </div>
+
+      <!-- Posts List View -->
+      <div id="postsView" style="display:none;">
+        <div class="main-header">
+          <div class="main-title">All Blog Posts <small id="postCountLabel"></small></div>
+          <button class="btn btn-gold" onclick="showView('editor')">+ New Post</button>
+        </div>
+        <div id="postsListFull"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── PASSWORD ──────────────────────────────────────────────
+// Change this password to whatever you want
+const ADMIN_PASSWORD = 'royalty2025';
+
+function doLogin() {
+  const pw = document.getElementById('pwInput').value;
+  if (pw === ADMIN_PASSWORD) {
+    sessionStorage.setItem('rl_admin', '1');
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    init();
+  } else {
+    document.getElementById('loginErr').textContent = 'Incorrect password. Try again.';
+    document.getElementById('pwInput').value = '';
+    document.getElementById('pwInput').focus();
+  }
+}
+
+function doLogout() {
+  sessionStorage.removeItem('rl_admin');
+  location.reload();
+}
+
+// ── INIT ──────────────────────────────────────────────────
+// Known posts: seeded from the 3 existing posts; admin adds more locally
+let knownPosts = JSON.parse(localStorage.getItem('rl_posts') || 'null') || [
+  { file: '_posts/2025-05-20-royal-hair-routine.md', title: 'The Royal Hair Routine', date: '2025-05-20', tag: 'Hair Care' },
+  { file: '_posts/2025-05-13-skincare-mistakes.md',  title: 'Skincare Mistakes to Avoid', date: '2025-05-13', tag: 'Skin Care' },
+  { file: '_posts/2025-05-06-nail-trends-2025.md',   title: 'Nail Trends 2025', date: '2025-05-06', tag: 'Nail Art' },
+];
+
+function savePosts() { localStorage.setItem('rl_posts', JSON.stringify(knownPosts)); }
+
+function init() {
+  // Default date = today
+  document.getElementById('postDate').value = new Date().toISOString().slice(0,10);
+  renderSidebar();
+  if (sessionStorage.getItem('rl_admin') !== '1') location.reload();
+}
+
+// ── VIEWS ─────────────────────────────────────────────────
+function showView(v) {
+  document.getElementById('editorView').style.display = v === 'editor' ? '' : 'none';
+  document.getElementById('postsView').style.display  = v === 'posts'  ? '' : 'none';
+  document.querySelectorAll('.sidebar-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item')[v === 'editor' ? 0 : 1].classList.add('active');
+  if (v === 'posts') renderPostsList();
+}
+
+// ── SIDEBAR ───────────────────────────────────────────────
+function renderSidebar() {
+  const el = document.getElementById('sidebarPostList');
+  const sorted = [...knownPosts].sort((a,b) => b.date.localeCompare(a.date));
+  el.innerHTML = sorted.map((p,i) => `
+    <div class="post-item" onclick="loadPostMeta('${p.file}')">
+      <div>
+        <div class="post-item-title">${p.title}</div>
+        <div class="post-item-date">${p.date}</div>
+        <span class="post-item-tag">${p.tag}</span>
+      </div>
+      <button class="post-item-del" title="Remove from list" onclick="event.stopPropagation();removePost('${p.file}')">×</button>
+    </div>`).join('');
+}
+
+function removePost(file) {
+  if (!confirm('Remove this post from your local list? (It stays on the site until you update posts-index.json on GitHub)')) return;
+  knownPosts = knownPosts.filter(p => p.file !== file);
+  savePosts();
+  renderSidebar();
+  showToast('Post removed from local list');
+}
+
+function loadPostMeta(file) {
+  const p = knownPosts.find(x => x.file === file);
+  if (!p) return;
+  document.getElementById('postTitle').value = p.title || '';
+  document.getElementById('postDate').value  = p.date  || '';
+  document.getElementById('postTag').value   = p.tag   || 'General';
+  showView('editor');
+  showToast('Loaded post metadata — edit and re-download to update');
+}
+
+// ── POSTS LIST ────────────────────────────────────────────
+function renderPostsList() {
+  const sorted = [...knownPosts].sort((a,b) => b.date.localeCompare(a.date));
+  document.getElementById('postCountLabel').textContent = `${sorted.length} post${sorted.length===1?'':'s'}`;
+  document.getElementById('postsListFull').innerHTML = sorted.map(p => `
+    <div style="background:var(--card);border:1px solid var(--border);padding:20px 24px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-family:'Cinzel',serif;font-size:.95rem;color:var(--white);margin-bottom:6px;">${p.title}</div>
+        <div style="font-size:.72rem;color:var(--muted);">${p.date} &nbsp;·&nbsp; <span style="color:var(--gold);">${p.tag}</span></div>
+        <div style="font-size:.7rem;color:rgba(156,140,178,.45);margin-top:4px;">${p.file}</div>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="removePost('${p.file}')">Remove</button>
+    </div>`).join('') || `<p style="color:var(--muted);font-family:'Cormorant Garamond',serif;font-style:italic;padding:24px 0;">No posts yet. Write your first one!</p>`;
+}
+
+// ── EDITOR ────────────────────────────────────────────────
+function clearEditor() {
+  ['postTitle','postExcerpt','postBody'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('postDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('postTag').value = 'Hair Care';
+  updatePreview();
+}
+
+function slugify(str) {
+  return str.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,50);
+}
+
+function insertMd(before, after) {
+  const ta = document.getElementById('postBody');
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  const sel = ta.value.substring(s, e);
+  ta.setRangeText(before + sel + after, s, e, 'end');
+  ta.focus();
+  updatePreview();
+}
+
+function updatePreview() {
+  const md = document.getElementById('postBody').value;
+  document.getElementById('previewArea').innerHTML = md ? parseMarkdown(md) : '<em style="color:var(--muted);font-size:.88rem;">Start typing to see a preview…</em>';
+}
+
+function parseMarkdown(md) {
+  return md
+    .replace(/^## (.+)$/gm,'<h2>$1</h2>')
+    .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/^- (.+)$/gm,'<li>$1</li>')
+    .split('\n\n').map(block => {
+      if (!block.trim()) return '';
+      if (block.startsWith('<h') || block.startsWith('<li')) return block.includes('<li>') ? '<ul>'+block+'</ul>' : block;
+      return '<p>'+block.replace(/\n/g,' ')+'</p>';
+    }).join('\n');
+}
+
+// ── DOWNLOAD POST ─────────────────────────────────────────
+function downloadPost() {
+  const title   = document.getElementById('postTitle').value.trim();
+  const tag     = document.getElementById('postTag').value;
+  const date    = document.getElementById('postDate').value;
+  const excerpt = document.getElementById('postExcerpt').value.trim();
+  const body    = document.getElementById('postBody').value.trim();
+
+  if (!title)   { showToast('⚠ Please enter a title', true); return; }
+  if (!excerpt) { showToast('⚠ Please enter an excerpt', true); return; }
+  if (!body)    { showToast('⚠ Please write the post body', true); return; }
+
+  const slug     = slugify(title);
+  const filename = `${date}-${slug}.md`;
+  const filePath = `_posts/${filename}`;
+
+  const content = `---\ntitle: "${title}"\ndate: ${date}\ntag: ${tag}\nexcerpt: "${excerpt}"\nimage: ""\n---\n\n${body}\n`;
+
+  downloadFile(filename, content);
+
+  // Register in known posts
+  if (!knownPosts.find(p => p.file === filePath)) {
+    knownPosts.unshift({ file: filePath, title, date, tag });
+    savePosts();
+    renderSidebar();
+  }
+
+  showToast('✓ Post file downloaded! Now also download posts-index.json');
+}
+
+// ── DOWNLOAD POSTS-INDEX ──────────────────────────────────
+function updateIndexFile() {
+  const sorted = [...knownPosts].sort((a,b) => b.date.localeCompare(a.date));
+  const index  = sorted.map(p => p.file);
+  const json   = JSON.stringify(index, null, 2) + '\n';
+  downloadFile('posts-index.json', json);
+  showToast('✓ posts-index.json downloaded!');
+}
+
+// ── FILE DOWNLOAD HELPER ──────────────────────────────────
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ── TOAST ─────────────────────────────────────────────────
+function showToast(msg, err=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = err ? '#e05555' : 'var(--gold)';
+  t.style.color = err ? '#e05555' : 'var(--gold)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── AUTO-LOGIN CHECK ──────────────────────────────────────
+if (sessionStorage.getItem('rl_admin') === '1') {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  init();
+}
+</script>
 </body>
 </html>
