@@ -1011,5 +1011,17 @@ window.addEventListener('scroll', () => {
 // Load blog posts on page load
 loadPosts();
 </script>
+<script>
+  (function() {
+    const script = document.createElement('script');
+    script.src = 'https://assistloop.ai/assistloop-widget.js';
+    script.onload = function() {
+      AssistLoopWidget.init({
+        agentId: "c7bc65cc-56a1-45f6-ab9b-db8e5ab81f86"
+      });
+    };
+    document.head.appendChild(script);
+  })();
+</script>
 </body>
 </html>
